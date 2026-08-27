@@ -434,18 +434,42 @@ const TIME_PRESETS = [
 ];
 
 function TimePresets({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const minutes = Math.floor(value / 60);
+  const seconds = value % 60;
+  const setCustomTime = (nextMinutes: number, nextSeconds: number) => {
+    // Timed matches need a meaningful, bounded duration while still supporting
+    // any whole-second value a match creator wants within that range.
+    onChange(Math.min(3600, Math.max(10, nextMinutes * 60 + nextSeconds)));
+  };
+
   return (
-    <div className="grid grid-cols-5 gap-1.5 w-full">
-      {TIME_PRESETS.map(({ label, secs }) => (
-        <button key={secs} onClick={() => { sfx.click(); onChange(secs); }}
-          className={`h-10 rounded-[4px] font-['JetBrains_Mono',_monospace] text-xs transition-all border ${
-            value === secs
-              ? "bg-[rgba(255,170,59,0.12)] border-[rgba(255,170,59,0.4)] text-[#ffaa3b]"
-              : "bg-[#0c1016] border-white/[0.07] text-[#3d5060] hover:text-[#6a8090] hover:border-white/[0.12]"
-          }`}>
-          {label}
-        </button>
-      ))}
+    <div className="space-y-3 w-full">
+      <div className="grid grid-cols-5 gap-1.5">
+        {TIME_PRESETS.map(({ label, secs }) => (
+          <button key={secs} onClick={() => { sfx.click(); onChange(secs); }}
+            className={`h-10 rounded-[4px] font-['JetBrains_Mono',_monospace] text-xs transition-all border ${
+              value === secs
+                ? "bg-[rgba(255,170,59,0.12)] border-[rgba(255,170,59,0.4)] text-[#ffaa3b]"
+                : "bg-[#0c1016] border-white/[0.07] text-[#3d5060] hover:text-[#6a8090] hover:border-white/[0.12]"
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <div>
+        <div className="text-[10px] font-['Share_Tech_Mono',_monospace] tracking-[0.2em] text-[#2d4050] mb-2">CUSTOM TIME</div>
+        <div className="flex items-center gap-2">
+          <input aria-label="Custom match minutes" type="number" min="0" max="60" value={minutes}
+            onChange={(e) => setCustomTime(Number(e.target.value) || 0, seconds)}
+            className="w-full h-10 rounded-[4px] bg-[#0c1016] border border-white/[0.07] px-2 text-center font-['JetBrains_Mono',_monospace] text-sm text-[#ffaa3b] focus:outline-none focus:border-[rgba(255,170,59,0.45)]" />
+          <span className="font-['JetBrains_Mono',_monospace] text-[#6a4d2e]">:</span>
+          <input aria-label="Custom match seconds" type="number" min="0" max="59" value={String(seconds).padStart(2, "0")}
+            onChange={(e) => setCustomTime(minutes, Math.min(59, Math.max(0, Number(e.target.value) || 0)))}
+            className="w-full h-10 rounded-[4px] bg-[#0c1016] border border-white/[0.07] px-2 text-center font-['JetBrains_Mono',_monospace] text-sm text-[#ffaa3b] focus:outline-none focus:border-[rgba(255,170,59,0.45)]" />
+          <span className="w-10 text-[10px] font-mono text-[#3d4030]">MIN:SEC</span>
+        </div>
+        <div className="mt-1 text-[10px] font-mono text-[#1e3040]">10 seconds to 60 minutes</div>
+      </div>
     </div>
   );
 }
@@ -890,7 +914,7 @@ export default function App() {
   // ── Render ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#07090c] text-[#b8c8d4] overflow-x-hidden">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync" initial={false}>
 
         {/* ── SPLASH ─────────────────────────────────────── */}
         {screen === "splash" && (
