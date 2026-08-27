@@ -383,7 +383,7 @@ function Keypad({ onPress, onDel, disabled, used = [] }: { onPress: (n: number) 
 }
 
 // Circular countdown ring
-function TimerRing({ remaining, limit, size = 48 }: { remaining: number; limit: number; size?: number }) {
+function TimerRing({ remaining, limit, size = 48, animate = true }: { remaining: number; limit: number; size?: number; animate?: boolean }) {
   const r = size / 2 - 4;
   const circ = 2 * Math.PI * r;
   const pct = Math.max(0, remaining / limit);
@@ -397,7 +397,7 @@ function TimerRing({ remaining, limit, size = 48 }: { remaining: number; limit: 
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#1a2530" strokeWidth="3" />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="3"
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-          style={{ transition: "stroke-dasharray 0.9s linear, stroke 0.3s" }} />
+          style={{ transition: animate ? "stroke-dasharray 0.9s linear, stroke 0.3s" : "none" }} />
       </svg>
       <span className="absolute font-['JetBrains_Mono',_monospace] font-bold" style={{ fontSize: size < 40 ? 9 : 11, color }}>
         {fmtTime(remaining)}
@@ -447,7 +447,7 @@ function TimePresets({ value, onChange }: { value: number; onChange: (v: number)
       <div className="grid grid-cols-5 gap-1.5">
         {TIME_PRESETS.map(({ label, secs }) => (
           <button key={secs} onClick={() => { sfx.click(); onChange(secs); }}
-            className={`h-10 rounded-[4px] font-['JetBrains_Mono',_monospace] text-xs transition-all border ${
+            className={`h-10 rounded-[4px] font-['JetBrains_Mono',_monospace] text-xs border ${
               value === secs
                 ? "bg-[rgba(255,170,59,0.12)] border-[rgba(255,170,59,0.4)] text-[#ffaa3b]"
                 : "bg-[#0c1016] border-white/[0.07] text-[#3d5060] hover:text-[#6a8090] hover:border-white/[0.12]"
@@ -1171,7 +1171,7 @@ export default function App() {
               {divider}
               {timedMode && (
                 <div className="flex items-center justify-center gap-3 py-2 bg-[rgba(255,170,59,0.05)] border border-[rgba(255,170,59,0.15)] rounded-[6px]">
-                  <TimerRing remaining={timeLimit} limit={timeLimit} size={44} />
+                  <TimerRing remaining={timeLimit} limit={timeLimit} size={44} animate={false} />
                   <div>
                     <div className="font-['Share_Tech_Mono',_monospace] text-xs text-[#ffaa3b] tracking-widest">{fmtTime(timeLimit)} MATCH</div>
                     <div className="text-[10px] font-mono text-[#3d4030] mt-0.5">winner = best approximation</div>
