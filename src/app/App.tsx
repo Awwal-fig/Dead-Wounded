@@ -492,6 +492,41 @@ function FlickerTitle() {
 
 const TRANS = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -12 }, transition: { duration: 0.22 } };
 
+// Keep this component at module scope so changing a time preset only updates its
+// values. Defining it inside App would give React a new component type on every
+// state update, remounting the timed controls and replaying their enter animation.
+function SettingsPanel({
+  timedMode,
+  timeLimit,
+  onTimedModeChange,
+  onTimeLimitChange,
+}: {
+  timedMode: boolean;
+  timeLimit: number;
+  onTimedModeChange: (timed: boolean) => void;
+  onTimeLimitChange: (limit: number) => void;
+}) {
+  return (
+    <div className="w-full space-y-3">
+      <div className="text-[10px] font-['Share_Tech_Mono',_monospace] tracking-[0.2em] text-[#2d4050] mb-2">GAME MODE</div>
+      <ModeToggle timed={timedMode} onChange={onTimedModeChange} />
+      <AnimatePresence>
+        {timedMode && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+            <div className="pt-1 space-y-2">
+              <div className="text-[10px] font-['Share_Tech_Mono',_monospace] tracking-[0.2em] text-[#2d4050] mb-2">TIME LIMIT</div>
+              <TimePresets value={timeLimit} onChange={onTimeLimitChange} />
+              <div className="flex items-center gap-2 pt-1">
+                <div className="text-[10px] font-mono text-[#1e3040]">Winner = closest guess when time expires</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Session persistence ────────────────────────────────────────
 const SAVE_KEY = "dw-session";
 interface SavedGame {
@@ -890,26 +925,14 @@ export default function App() {
   );
   const divider = <div className="w-full h-px bg-[rgba(0,245,155,0.07)] my-5" />;
 
-  // Settings panel (reused in game-settings screen and create screen)
-  const SettingsPanel = () => (
-    <div className="w-full space-y-3">
-      <SectionLabel>GAME MODE</SectionLabel>
-      <ModeToggle timed={timedMode} onChange={(v) => { setTimedMode(v); setTimeRemaining(v ? timeLimit : timeLimit); }} />
-      <AnimatePresence>
-        {timedMode && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-            <div className="pt-1 space-y-2">
-              <SectionLabel>TIME LIMIT</SectionLabel>
-              <TimePresets value={timeLimit} onChange={(v) => { setTimeLimit(v); setTimeRemaining(v); }} />
-              <div className="flex items-center gap-2 pt-1">
-                <div className="text-[10px] font-mono text-[#1e3040]">Winner = closest guess when time expires</div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  const updateTimedMode = (timed: boolean) => {
+    setTimedMode(timed);
+    setTimeRemaining(timeLimit);
+  };
+  const updateTimeLimit = (limit: number) => {
+    setTimeLimit(limit);
+    setTimeRemaining(limit);
+  };
 
   // ── Render ──────────────────────────────────────────────────
   return (
@@ -1167,7 +1190,7 @@ export default function App() {
               <div className="text-[#1e3040] text-xs font-mono tracking-widest">configure before your match begins</div>
             </div>
             <div className="w-full max-w-xs space-y-6">
-              <SettingsPanel />
+              <SettingsPanel timedMode={timedMode} timeLimit={timeLimit} onTimedModeChange={updateTimedMode} onTimeLimitChange={updateTimeLimit} />
               {divider}
               {timedMode && (
                 <div className="flex items-center justify-center gap-3 py-2 bg-[rgba(255,170,59,0.05)] border border-[rgba(255,170,59,0.15)] rounded-[6px]">
@@ -1227,7 +1250,7 @@ export default function App() {
               </button>
               {divider}
               {/* Settings — host sets before opponent joins */}
-              <SettingsPanel />
+              <SettingsPanel timedMode={timedMode} timeLimit={timeLimit} onTimedModeChange={updateTimedMode} onTimeLimitChange={updateTimeLimit} />
               {divider}
               <div className="flex flex-col items-center gap-3">
                 <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} className="w-2 h-2 rounded-full bg-[#00f59b]" />
