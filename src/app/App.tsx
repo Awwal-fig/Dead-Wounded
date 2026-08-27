@@ -548,6 +548,7 @@ function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch {} }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("splash");
+  const [guidePage, setGuidePage] = useState<0 | 1>(0);
   const [avatarId, setAvatarId] = useState("ghost");
   const [oppAvatarId, setOppAvatarId] = useState("cipher");
   const [mode, setMode] = useState<"online" | "ai">("ai");
@@ -1090,7 +1091,7 @@ export default function App() {
             <div className="flex flex-col gap-4 w-full max-w-xs">
               <GameButton onClick={() => { setMode("online"); setScreen("online-menu"); }} className="h-14 w-full text-base">PLAY ONLINE</GameButton>
               <GameButton onClick={() => setScreen("ai-diff")} className="h-14 w-full text-base" style={{ background: "linear-gradient(to bottom, #6ab028 0%, #4a8a14 40%, #2e6406 100%)" } as React.CSSProperties}>VS AI</GameButton>
-              <button onClick={() => { sfx.click(); setScreen("guide"); }} className="flex items-center justify-center gap-2 h-9 text-[#2d4050] hover:text-[#4a6070] font-['Share_Tech_Mono',_monospace] text-xs tracking-widest transition-colors">
+              <button onClick={() => { sfx.click(); setGuidePage(0); setScreen("guide"); }} className="flex items-center justify-center gap-2 h-9 text-[#2d4050] hover:text-[#4a6070] font-['Share_Tech_Mono',_monospace] text-xs tracking-widest transition-colors">
                 <BookOpen size={12} /> HOW TO PLAY
               </button>
             </div>
@@ -1101,66 +1102,56 @@ export default function App() {
         )}
 
         {/* ── GUIDE ──────────────────────────────────────── */}
-        {screen === "guide" && (
-          <motion.div key="guide" {...TRANS} className="flex flex-col min-h-screen p-6 max-w-lg mx-auto w-full">
-            <div className="flex items-center gap-3 py-4 mb-2">
-              <button onClick={() => { sfx.click(); setScreen("home"); }} className="text-[#2d4050] hover:text-[#4a6070] transition-colors"><ArrowLeft size={16} /></button>
-              <div className="font-['Share_Tech_Mono',_monospace] text-lg text-[#00f59b] tracking-widest flex items-center gap-2"><BookOpen size={16} /> HOW TO PLAY</div>
-            </div>
-            <div className="flex-1 overflow-y-auto scrollbar-hide space-y-8 pb-10">
-              {[
-                { n: 1, title: "THE MISSION", body: "Crack your opponent's secret 4-digit code before they crack yours. First to score 4 DEAD wins instantly." },
-                { n: 2, title: "SET YOUR CODE", body: "Pick any 4 digits (0–9). No digit can repeat. There are 5,040 possible codes — your secret is safe." },
-                { n: 3, title: "DEAD & WOUNDED", body: null },
-                { n: 4, title: "TAKING TURNS", body: "Players alternate one guess per turn. Use the feedback to narrow down the code. There is no guess limit." },
-                { n: 5, title: "TIMED MODE", body: "Set a time limit. When the clock hits zero, whoever got the closest single guess wins. Closest = most DEAD → most WOUNDED → fewer guesses taken." },
-                { n: 6, title: "PLAY ONLINE", body: "Create a match → share the 4-letter room code → opponent joins on any device. Your secret codes never travel over the network." },
-                { n: 7, title: "TIPS", body: null },
-              ].map(({ n, title, body }) => (
-                <div key={n} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[rgba(0,245,155,0.12)] border border-[rgba(0,245,155,0.3)] flex items-center justify-center font-['JetBrains_Mono',_monospace] text-[10px] text-[#00f59b] shrink-0">{n}</div>
-                    <div className="font-['Share_Tech_Mono',_monospace] text-sm text-[#00f59b] tracking-[0.15em]">{title}</div>
-                  </div>
-                  <div className="pl-8 space-y-3">
-                    {body && <p className="text-xs font-mono text-[#6a8090] leading-relaxed">{body}</p>}
-                    {n === 2 && (
-                      <div className="flex gap-2">{[3,7,0,9].map((d,i) => (<div key={i} className="w-10 h-11 bg-[#0c1016] border border-[rgba(0,245,155,0.25)] rounded-[3px] flex items-center justify-center font-['JetBrains_Mono',_monospace] text-lg text-[#00f59b]">{d}</div>))}</div>
-                    )}
-                    {n === 3 && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex items-center gap-2 bg-[#0c1016] border border-white/[0.06] rounded p-2"><div className="w-3 h-3 rounded-full bg-[#ff3b5c] shrink-0"/><span className="text-[10px] font-mono text-[#6a8090]">DEAD — right digit, right position</span></div>
-                          <div className="flex items-center gap-2 bg-[#0c1016] border border-white/[0.06] rounded p-2"><div className="w-3 h-3 rounded-full bg-[#ffaa3b] shrink-0"/><span className="text-[10px] font-mono text-[#6a8090]">WOUNDED — right digit, wrong spot</span></div>
-                        </div>
-                        <div className="bg-[#0c1016] border border-white/[0.06] rounded-[4px] p-3 space-y-2">
-                          <div className="flex items-center gap-2 text-[10px] font-['JetBrains_Mono',_monospace]">
-                            <span className="text-[#2d4050] w-14">SECRET</span>
-                            <div className="flex gap-1">{[3,7,0,9].map((d,i)=><div key={i} className="w-7 h-7 bg-[#111820] border border-white/[0.06] rounded-[2px] flex items-center justify-center text-[#4a6070]">{d}</div>)}</div>
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] font-['JetBrains_Mono',_monospace]">
-                            <span className="text-[#2d4050] w-14">GUESS</span>
-                            <div className="flex gap-1">{[3,0,7,5].map((d,i)=><div key={i} className="w-7 h-7 bg-[#111820] border border-white/[0.06] rounded-[2px] flex items-center justify-center text-[#c2cfd8]">{d}</div>)}</div>
-                            <Pips dead={1} wounded={2} />
-                            <span className="text-[#ff3b5c]">1D</span><span className="text-[#ffaa3b]">2W</span>
-                          </div>
-                          <p className="text-[10px] font-mono text-[#3d5060]">The 3 is DEAD (position 0 matches). 7 and 0 are WOUNDED (in the code, wrong spots). 5 is a miss.</p>
-                        </div>
-                      </div>
-                    )}
-                    {n === 7 && (
-                      <div className="space-y-1.5">
-                        {["Start with digits spread across 0–9 to gather maximum information fast.", "A WOUNDED digit IS in the code — just move it to a different slot.", "Once a digit is confirmed DEAD, lock it in every future guess.", "Hard AI uses minimax — it cracks most codes in 5 guesses. Stay sharp."].map((tip, i) => (
-                          <div key={i} className="flex gap-2 text-[10px] font-mono text-[#4a6070]"><span className="text-[#1e3040] shrink-0">›</span>{tip}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+        {screen === "guide" && (() => {
+          const steps = [
+            { n: 1, title: "THE MISSION", body: "Crack the secret 4-digit code first. Four DEAD wins." },
+            { n: 2, title: "SET YOUR CODE", body: "Choose four different digits from 0–9. Repeats are not allowed." },
+            { n: 3, title: "DEAD & WOUNDED", body: "Use each result to eliminate possibilities." },
+            { n: 4, title: "TAKING TURNS", body: "Alternate one guess at a time. There is no guess limit." },
+            { n: 5, title: "TIMED MODE", body: "At time-out, the closest guess wins: most DEAD, then WOUNDED, then fewer guesses." },
+            { n: 6, title: "PLAY ONLINE", body: "Create a match, share its 4-letter room code, and let your opponent join from any device." },
+            { n: 7, title: "TIPS", body: "Start with spread-out digits; move WOUNDED digits; keep every confirmed DEAD digit fixed." },
+          ];
+          // Step 4 bridges both pages so each four-step glance has complete turn guidance.
+          const visibleSteps = (guidePage === 0 ? [1, 2, 3, 4] : [4, 5, 6, 7]).map((n) => steps[n - 1]);
+
+          return (
+            <motion.div key="guide" {...TRANS} className="flex h-[100dvh] flex-col overflow-hidden p-4 sm:p-6 max-w-2xl mx-auto w-full">
+              <div className="flex shrink-0 items-center gap-3 py-2 sm:py-4">
+                <button aria-label="Back to main menu" onClick={() => { sfx.click(); setScreen("home"); }} className="text-[#2d4050] hover:text-[#4a6070] transition-colors"><ArrowLeft size={16} /></button>
+                <div className="font-['Share_Tech_Mono',_monospace] text-base sm:text-lg text-[#00f59b] tracking-widest flex items-center gap-2"><BookOpen size={16} /> HOW TO PLAY</div>
+              </div>
+
+              <div className="mb-3 flex shrink-0 items-center justify-between gap-3 rounded border border-[rgba(0,245,155,0.14)] bg-[#0c1016] px-3 py-2">
+                <div className="font-['JetBrains_Mono',_monospace] text-[10px] tracking-[0.12em] text-[#6a8090]">GUIDE {guidePage + 1} OF 2 <span className="hidden sm:inline">· STEPS {guidePage === 0 ? "1–4" : "4–7"}</span></div>
+                <div className="flex items-center gap-1.5" aria-label={`Guide page ${guidePage + 1} of 2`}>
+                  {[0, 1].map((page) => <button key={page} aria-label={`Show guide page ${page + 1}`} aria-current={guidePage === page ? "page" : undefined} onClick={() => { sfx.click(); setGuidePage(page as 0 | 1); }} className={`h-2 rounded-full transition-all ${guidePage === page ? "w-6 bg-[#00f59b]" : "w-2 bg-[#2d4050] hover:bg-[#4a6070]"}`} />)}
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+              </div>
+
+              <div className="grid min-h-0 flex-1 grid-rows-4 gap-2 sm:gap-3">
+                {visibleSteps.map(({ n, title, body }) => (
+                  <article key={`${guidePage}-${n}`} className="min-h-0 overflow-hidden rounded-[5px] border border-white/[0.06] bg-[#0c1016] p-2.5 sm:p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[rgba(0,245,155,0.3)] bg-[rgba(0,245,155,0.12)] font-['JetBrains_Mono',_monospace] text-[9px] text-[#00f59b]">{n}</div>
+                      <h2 className="font-['Share_Tech_Mono',_monospace] text-xs sm:text-sm text-[#00f59b] tracking-[0.13em]">{title}</h2>
+                    </div>
+                    <div className="mt-1.5 pl-7">
+                      <p className="text-[10px] sm:text-xs font-mono text-[#6a8090] leading-snug">{body}</p>
+                      {n === 2 && <div className="mt-1.5 flex gap-1">{[3, 7, 0, 9].map((d, i) => <div key={i} className="flex h-5 w-5 items-center justify-center rounded-[2px] border border-[rgba(0,245,155,0.25)] bg-[#111820] font-mono text-[10px] text-[#00f59b]">{d}</div>)}</div>}
+                      {n === 3 && <div className="mt-1.5 flex flex-wrap gap-1.5 text-[9px] font-mono"><span className="rounded border border-white/[0.06] bg-[#111820] px-1.5 py-1 text-[#ff7187]"><i className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#ff3b5c]" />DEAD: right digit, right spot</span><span className="rounded border border-white/[0.06] bg-[#111820] px-1.5 py-1 text-[#ffc467]"><i className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#ffaa3b]" />WOUNDED: right digit, wrong spot</span></div>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="flex shrink-0 items-center justify-between pt-3">
+                <button onClick={() => { sfx.click(); setGuidePage(0); }} disabled={guidePage === 0} className="min-h-9 px-2 font-['Share_Tech_Mono',_monospace] text-[10px] tracking-widest text-[#6a8090] disabled:opacity-30">← PREVIOUS</button>
+                <button onClick={() => { sfx.click(); setGuidePage(1); }} disabled={guidePage === 1} className="min-h-9 px-2 font-['Share_Tech_Mono',_monospace] text-[10px] tracking-widest text-[#00f59b] disabled:opacity-30">NEXT PAGE →</button>
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* ── AI DIFFICULTY ──────────────────────────────── */}
         {screen === "ai-diff" && (
